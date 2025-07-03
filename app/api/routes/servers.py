@@ -30,9 +30,9 @@ async def register_server(req: RegisterServerRequest):
         raise HTTPException(status_code=500, detail="Unexpected error")
 
 @router.delete("/{server_id}")
-def remove_server(server_id: str):
+async def remove_server(server_id: str):
     try:
-        server_service.remove_server(server_id)
+        await server_service.remove_server(server_id)
         return {"message": f"Server {server_id} removed"}
     except ServerNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
