@@ -1,3 +1,5 @@
+from tokenize import String
+
 import httpx
 
 async def send_to_ai_server(server_url: str, model: str, prompt: str, api_key: str = None):
@@ -21,4 +23,4 @@ async def send_to_ai_server(server_url: str, model: str, prompt: str, api_key: s
         response = await client.post(url, json=payload, headers=headers)
         response.raise_for_status()
         data = response.json()
-        return data.get("result", data)
+        return str(data.get("result", data))
