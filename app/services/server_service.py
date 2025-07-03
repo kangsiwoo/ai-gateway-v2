@@ -1,5 +1,8 @@
 from typing import Dict
+from urllib.parse import urlparse
+
 from app.queues.server_queue import ServerQueue
+from app.core.exceptions import ServerRegistrationError, ServerNotFoundError
 
 class ServerService:
     def __init__(self):
@@ -7,6 +10,10 @@ class ServerService:
         self.counter = 1
 
     async def register_server(self, url: str) -> str:
+        parsed = urlparse(url)
+        if not parsed.scheme or not parsed.netloc:
+            raise ServerRegistrationError("Invalid server URL")
+
         server_id = str(self.counter)
         self.counter += 1
         server_queue = ServerQueue(server_id, url)
@@ -22,7 +29,7 @@ class ServerService:
             self.servers[server_id].stop()
             del self.servers[server_id]
         else:
-            raise KeyError(f"Server {server_id} not found")
+            raise ServerNotFoundError(f"Server {server_id} not found")
 
     def list_servers(self):
         # 각 서버의 상태 정보 리스트 반환

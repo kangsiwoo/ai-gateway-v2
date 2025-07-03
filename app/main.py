@@ -1,4 +1,7 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, HTTPException
+from fastapi.responses import JSONResponse
+from fastapi.exception_handlers import http_exception_handler
+from app.core.exceptions import AppException
 from app.core.config import settings
 from app.api.routes import servers, queries
 from app.log import elasticsearch as es_logging
@@ -8,6 +11,15 @@ app = FastAPI()
 # Include routes for servers and queries endpoints
 app.include_router(servers.router, prefix="/servers", tags=["servers"])
 app.include_router(queries.router, prefix="/queries", tags=["queries"])
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    if isinstance(exc, HTTPException):
+        return await http_exception_handler(request, exc)
+    if isinstance(exc, AppException):
+        return JSONResponse(status_code=500, content={"detail": str(exc)})
+    return JSONResponse(status_code=500, content={"detail": "Internal Server Error"})
 
 # Startup event: initialize resources (e.g., Elasticsearch client)
 @app.on_event("startup")
