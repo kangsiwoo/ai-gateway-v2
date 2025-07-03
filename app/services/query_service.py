@@ -13,7 +13,7 @@ class QueryService:
                 # 대상 서버가 없으면 404 오류 처리
                 raise RuntimeError(f"Server {q.server_id} not found")
             # 큐에 작업 등록하고 Future 확보
-            future = server_queue.submit_query(q.query)
+            future = server_queue.submit_query(q.model, q.prompt)
             futures.append(future)
         # 모든 쿼리 Future들이 완료될 때까지 비동기 대기
         results = await asyncio.gather(*futures)
