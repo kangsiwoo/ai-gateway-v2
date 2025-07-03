@@ -1,6 +1,11 @@
 from fastapi import APIRouter, HTTPException
 from app.models.server import RegisterServerRequest, ServerInfoResponse
 from app.services.server_service import server_service
+from app.core.exceptions import (
+    ServerNotFoundError,
+    ServerRegistrationError,
+    AppException,
+)
 
 router = APIRouter()
 
@@ -17,16 +22,24 @@ async def register_server(req: RegisterServerRequest):
             busy=server.busy,
             queue_size=server.queue.qsize()
         )
-    except ValueError as e:
+    except ServerRegistrationError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except AppException as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail="Unexpected error")
 
 @router.delete("/{server_id}")
 def remove_server(server_id: str):
     try:
         server_service.remove_server(server_id)
         return {"message": f"Server {server_id} removed"}
-    except KeyError as e:
+    except ServerNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))
+    except AppException as e:
+        raise HTTPException(status_code=500, detail=str(e))
+    except Exception:
+        raise HTTPException(status_code=500, detail="Unexpected error")
 
 @router.get("/", response_model=list[ServerInfoResponse])
 def list_servers():
