@@ -1,4 +1,8 @@
+import os
+
 from pydantic_settings import BaseSettings
+
+os.environ.get()
 
 class Settings(BaseSettings):
     es_host: str = "http://localhost:9200"
