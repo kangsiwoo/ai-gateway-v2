@@ -13,7 +13,10 @@ app.include_router(queries.router, prefix="/queries", tags=["queries"])
 @app.on_event("startup")
 async def startup_event():
     # Initialize AsyncElasticsearch client using settings
-    es_logging.es = es_logging.get_elasticsearch_client(settings.es_host)
+    es_logging.es = es_logging.get_elasticsearch_client(
+        settings.es_host,
+        settings.es_api_token,
+    )
     # (Optional) If there are pre-configured servers to add at startup, do it here.
     return
 

@@ -3,7 +3,8 @@ from typing import List
 
 class SingleQuery(BaseModel):
     server_id: str   # 대상 AI 서버 식별자
-    query: str       # 질의 내용
+    model: str       # 사용할 모델 이름
+    prompt: str      # 질의 내용
 
 class QueryRequest(BaseModel):
     queries: List[SingleQuery]  # 쿼리 목록 (2개 이상일 수 있음)
