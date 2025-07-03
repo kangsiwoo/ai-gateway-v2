@@ -1,6 +1,8 @@
 from typing import Dict
 from urllib.parse import urlparse
 
+from app.core import database
+
 from app.queues.server_queue import ServerQueue
 from app.core.exceptions import ServerRegistrationError, ServerNotFoundError
 
@@ -8,6 +10,18 @@ class ServerService:
     def __init__(self):
         self.servers: Dict[str, ServerQueue] = {}
         self.counter = 1
+
+    async def load_servers_from_db(self):
+        rows = await database.fetch_servers()
+        for row in rows:
+            server_id = row["server_id"]
+            url = row["url"]
+            server_queue = ServerQueue(server_id, url)
+            await server_queue.start_worker()
+            self.servers[server_id] = server_queue
+            num = int(server_id)
+            if num >= self.counter:
+                self.counter = num + 1
 
     async def register_server(self, url: str) -> str:
         parsed = urlparse(url)
@@ -20,14 +34,16 @@ class ServerService:
         # worker_task를 여기서 생성 (이제 비동기 함수니까 루프가 있음)
         await server_queue.start_worker()
         self.servers[server_id] = server_queue
+        await database.add_server(server_id, url)
         return server_id
 
 
-    def remove_server(self, server_id: str):
+    async def remove_server(self, server_id: str):
         if server_id in self.servers:
             # 워커 태스크 중지 및 서버 제거
             self.servers[server_id].stop()
             del self.servers[server_id]
+            await database.remove_server(server_id)
         else:
             raise ServerNotFoundError(f"Server {server_id} not found")
 

@@ -5,6 +5,8 @@ from app.core.exceptions import AppException
 from app.core.config import settings
 from app.api.routes import servers, queries
 from app.log import elasticsearch as es_logging
+from app.core import database
+from app.services.server_service import server_service
 
 app = FastAPI()
 
@@ -29,7 +31,8 @@ async def startup_event():
         settings.es_host,
         settings.es_api_token,
     )
-    # (Optional) If there are pre-configured servers to add at startup, do it here.
+    await database.connect_db()
+    await server_service.load_servers_from_db()
     return
 
 # Shutdown event: clean up resources
@@ -37,3 +40,4 @@ async def startup_event():
 async def shutdown_event():
     if es_logging.es:
         await es_logging.es.close()
+    await database.close_db()
