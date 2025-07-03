@@ -2,6 +2,7 @@ import asyncio
 from datetime import datetime
 from app.log import elasticsearch as es_logging
 from app.core.utils import send_to_ai_server
+from app.core.config import settings
 from app.queues.task import QueryTask
 
 class ServerQueue:
@@ -22,14 +23,20 @@ class ServerQueue:
             try:
                 self.busy = True
                 # AI 서버에 쿼리 전송 및 결과 획득
-                result = await send_to_ai_server(self.server_url, task.query)
+                result = await send_to_ai_server(
+                    self.server_url,
+                    task.model,
+                    task.prompt,
+                    settings.ai_api_token,
+                )
                 # Elasticsearch에 로그 저장
                 if es_logging.es:
                     log_doc = {
                         "timestamp": datetime.utcnow().isoformat(),
                         "server_id": self.server_id,
-                        "query": task.query,
-                        "result": result
+                        "model": task.model,
+                        "prompt": task.prompt,
+                        "result": result,
                     }
                     try:
                         await es_logging.es.index(index="query_logs", document=log_doc)
@@ -43,9 +50,9 @@ class ServerQueue:
                 self.busy = False
                 self.queue.task_done()        # 해당 작업 처리 완료 표시
 
-    def submit_query(self, query: str):
+    def submit_query(self, model: str, prompt: str):
         """새 쿼리를 큐에 넣고 Future를 반환한다."""
-        task = QueryTask(query)
+        task = QueryTask(model, prompt)
         # 비동기 큐에 작업 추가 (즉시 반환, 워커는 백그라운드에서 처리)
         self.queue.put_nowait(task)
         return task.future
