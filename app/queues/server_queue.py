@@ -30,18 +30,18 @@ class ServerQueue:
                     settings.ai_api_token,
                 )
                 # Elasticsearch에 로그 저장
-                if es_logging.es:
-                    log_doc = {
-                        "timestamp": datetime.utcnow().isoformat(),
-                        "server_id": self.server_id,
-                        "model": task.model,
-                        "prompt": task.prompt,
-                        "result": result,
-                    }
-                    try:
-                        await es_logging.es.index(index="query_logs", document=log_doc)
-                    except Exception as e:
-                        print(f"Failed to log to ES: {e}")
+                # if es_logging.es:
+                #     log_doc = {
+                #         "timestamp": datetime.utcnow().isoformat(),
+                #         "server_id": self.server_id,
+                #         "model": task.model,
+                #         "prompt": task.prompt,
+                #         "result": result,
+                #     }
+                #     try:
+                #         await es_logging.es.index(index="query_logs", document=log_doc)
+                #     except Exception as e:
+                #         print(f"Failed to log to ES: {e}")
                 # 쿼리 Future에 결과 설정 -> 대기 중이던 요청에 결과 전달
                 task.future.set_result(result)
             except Exception as e:
