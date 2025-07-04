@@ -6,7 +6,7 @@ load_dotenv()
 class Settings(BaseSettings):
     es_host: str = "http://localhost:9200"
     es_api_token: str = ""
-    ai_api_token: str = ""
+    ai_api_token: str = os.environ.get("OPEN_WEB_UI_TOKEN")
     db_url: str = os.environ.get("DB_URL")
     db_username: str = os.environ.get("DB_USERNAME")
     db_password: str = os.environ.get("DB_PASSWORD")
